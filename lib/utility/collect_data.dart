@@ -46,6 +46,7 @@ class CollectData {
           id: e['category_id'].toString(),
           image: e['category_image'].toString(),
           name: e['category_name'].toString(),
+          isSelect: false,
         ),
       );
     }).toList();
