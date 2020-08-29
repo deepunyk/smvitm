@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 
 class ReportIssue extends StatefulWidget {
   @override
@@ -28,7 +27,8 @@ class _ReportIssueState extends State<ReportIssue> {
           SizedBox(
             height: height * 0.05,
           ),
-          Lottie.asset('assets/anim/lost.json', width: height * 0.25),
+          Image.asset('assets/images/report.png', width: height * 0.34),
+          const SizedBox(height: 20.0),
           Text(
             "Lost somewhere?",
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 22),

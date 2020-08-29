@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:smvitm/screens/faculty_detail_screen.dart';
+import 'package:smvitm/screens/select_category_screen.dart';
 import 'package:smvitm/widgets/about.dart';
 import 'package:smvitm/widgets/categories_widget.dart';
 import 'package:smvitm/widgets/faculty_details.dart';
@@ -17,7 +18,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   Color _color;
   List _navHead = [
-    'NewsFeed',
+    'News Feed',
     'Categories',
     'Faculty Details',
     'Report an issue',
@@ -110,7 +111,9 @@ class _MainScreenState extends State<MainScreen> {
       floatingActionButton: _curIndex != 0
           ? null
           : FloatingActionButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.pushNamed(context, SelectCategoryScreen.routeName);
+              },
               child: Icon(
                 Icons.add,
                 color: _color,
@@ -121,7 +124,8 @@ class _MainScreenState extends State<MainScreen> {
         titleSpacing: 0,
         title: Text(
           "${_navHead[_curIndex]}",
-          style: TextStyle(color: _color),
+          style: TextStyle(
+              color: _color, letterSpacing: 0.2, fontWeight: FontWeight.w600),
         ),
         backgroundColor: Colors.white,
         iconTheme: IconThemeData(color: _color),
