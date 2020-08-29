@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:smvitm/config/color_palette.dart';
 import 'package:smvitm/providers/categories.dart';
@@ -21,7 +22,7 @@ void main() async {
   await FlutterDownloader.initialize(
       debug: true // optional: set false to disable printing logs to console
       );
-
+  await GetStorage.init();
   runApp(
     MultiProvider(
       providers: [

@@ -5,6 +5,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:smvitm/screens/splash_screen.dart';
+import 'package:smvitm/widgets/loading.dart';
 
 class AddFeedScreen extends StatefulWidget {
   final String categoryId, type, fid;
@@ -29,6 +31,7 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
   List<String> _imageFormats = ['jpg', 'jpeg', 'png'];
   List<String> _documentFormats = ['pdf', 'doc'];
   List<Map<String, String>> _listOfMap = [];
+  bool isLoad = false;
 
   @override
   void initState() {
@@ -69,50 +72,52 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
             )
         ],
       ),
-      body: Container(
-        height: _mediaQuery.height,
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            const SizedBox(height: 6.0),
-            _InputField(controller: _title, label: 'Title'),
-            const SizedBox(height: 10.0),
-            _InputField(
-              controller: _description,
-              label: 'Description',
-              maxLines: 6,
-            ),
-            const SizedBox(height: 20.0),
-            if (_files != null)
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _files.length,
-                  itemBuilder: (context, index) {
-                    String fileName = _files[index].toString();
-                    return ListTile(
-                      title: Text(
-                        fileName.substring(fileName.lastIndexOf('/') + 1,
-                            fileName.lastIndexOf('\'')),
-                        maxLines: 2,
-                        style: TextStyle(),
-                      ),
-                      trailing: IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _files.removeAt(index);
-                          });
+      body: isLoad
+          ? Loading()
+          : Container(
+              height: _mediaQuery.height,
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  const SizedBox(height: 6.0),
+                  _InputField(controller: _title, label: 'Title'),
+                  const SizedBox(height: 10.0),
+                  _InputField(
+                    controller: _description,
+                    label: 'Description',
+                    maxLines: 6,
+                  ),
+                  const SizedBox(height: 20.0),
+                  if (_files != null)
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: _files.length,
+                        itemBuilder: (context, index) {
+                          String fileName = _files[index].toString();
+                          return ListTile(
+                            title: Text(
+                              fileName.substring(fileName.lastIndexOf('/') + 1,
+                                  fileName.lastIndexOf('\'')),
+                              maxLines: 2,
+                              style: TextStyle(),
+                            ),
+                            trailing: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _files.removeAt(index);
+                                });
+                              },
+                              icon: Icon(MdiIcons.fileRemove),
+                            ),
+                          );
                         },
-                        icon: Icon(MdiIcons.fileRemove),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  _Button(title: 'SUBMIT', onTap: _submit),
+                  const SizedBox(height: 20.0),
+                ],
               ),
-            _Button(title: 'SUBMIT', onTap: _submit),
-            const SizedBox(height: 20.0),
-          ],
-        ),
-      ),
+            ),
     );
   }
 
@@ -147,22 +152,29 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
                 _listOfMap.add({'res': e})
               })
           .toList();
-
+      setState(() {
+        isLoad = true;
+      });
       http.Response response = await http
           .post('http://smvitmapp.xtoinfinity.tech/php/addFeed.php', body: {
-        'category_id': '1',
+        'category_id': widget.categoryId,
         'feed_title': _title.text,
         'feed_description': _description.text,
         'feed_type': widget.type,
-        'faculty_id': '100',
+        'faculty_id': widget.fid,
         'feed_res':
             widget.type == 'Text' ? '' : JsonEncoder().convert(_listOfMap),
-        'type': widget.type
+        'type': widget.type,
+        'feed_time': DateTime.now().toString(),
+      });
+      setState(() {
+        isLoad = false;
       });
       print(response.body.toString());
 
       if (response.body.toString() == 'yes') {
-        Navigator.pop(context);
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil(SplashScreen.routeName, (route) => false);
       } else {
         _showSnackBar('Something went wrong... Please try again');
       }
@@ -225,6 +237,7 @@ class _InputField extends StatelessWidget {
         controller: controller,
         textInputAction: TextInputAction.done,
         keyboardType: TextInputType.text,
+        textCapitalization: TextCapitalization.sentences,
         maxLines: maxLines,
         style: TextStyle(
           fontWeight: FontWeight.w600,

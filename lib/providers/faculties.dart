@@ -42,4 +42,18 @@ class Faculties with ChangeNotifier {
     }).toList();
     return faculty;
   }
+
+  Faculty getOneFaculty(String id) {
+    Faculty _faculty;
+    _faculties.map((e) {
+      if (e.id == id) {
+        _faculty = e;
+      }
+    }).toList();
+    return _faculty;
+  }
+
+  deleteItem() {
+    _faculties.clear();
+  }
 }

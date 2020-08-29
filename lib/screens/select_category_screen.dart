@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:smvitm/config/color_palette.dart';
@@ -121,12 +122,17 @@ class _Card extends StatelessWidget {
   final String title;
   final String categoryId;
 
-  const _Card({
+  _Card({
     Key key,
     @required this.icon,
     @required this.title,
     @required this.categoryId,
   }) : super(key: key);
+
+  String _getID() {
+    final box = GetStorage();
+    return box.read('id');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,8 +141,8 @@ class _Card extends StatelessWidget {
         Navigator.pop(context);
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (BuildContext context) =>
-                AddFeedScreen(categoryId: categoryId, type: title, fid: '1'),
+            builder: (BuildContext context) => AddFeedScreen(
+                categoryId: categoryId, type: title, fid: _getID()),
           ),
         );
       },

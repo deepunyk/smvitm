@@ -1,9 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_pro/carousel_pro.dart';
 import 'package:flutter/material.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:smvitm/screens/image_view_screen.dart';
 import 'package:smvitm/screens/pdf_view_screen.dart';
+import 'package:smvitm/screens/splash_screen.dart';
+import 'package:smvitm/utility/feed_utility.dart';
+import 'package:smvitm/widgets/loading.dart';
 
 class FeedDetailScreen extends StatefulWidget {
   static const routeName = '/feed';
@@ -17,50 +22,29 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
 
   Color _color;
   double height = 0, width = 0;
+  final box = GetStorage();
+  FeedUtility _feedUtility = FeedUtility();
+  bool isLoad = false;
 
-  Widget _popUpMenu() {
-    return PopupMenuButton<int>(
-      onSelected: (val) {},
-      itemBuilder: (context) => [
-        PopupMenuItem(
-            value: 1,
-            child: Row(
-              children: [
-                Icon(
-                  Icons.edit,
-                  size: 16,
-                  color: _color,
-                ),
-                SizedBox(
-                  width: 5,
-                ),
-                Text(
-                  "Edit",
-                  style: TextStyle(fontSize: 14),
-                )
-              ],
-            )),
-        PopupMenuItem(
-            value: 2,
-            child: Row(
-              children: [
-                Icon(
-                  Icons.delete,
-                  size: 16,
-                  color: _color,
-                ),
-                SizedBox(
-                  width: 5,
-                ),
-                Text(
-                  "Delete",
-                  style: TextStyle(fontSize: 14),
-                )
-              ],
-            )),
-      ],
-      child: Icon(MdiIcons.dotsVertical),
-    );
+  bool _checkFaculty() {
+    if (box.hasData('id')) {
+      if (_feedList['facultyId'] == box.read('id')) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+
+  String _convertDate() {
+    String time = _feedList['time'].toString();
+    return DateFormat.d()
+        .add_E()
+        .add_jm()
+        .format(DateTime.parse(time))
+        .toString();
   }
 
   Widget _topDetail() {
@@ -68,14 +52,15 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
       margin: EdgeInsets.only(left: 16, right: 16),
       child: Row(
         children: [
-          Container(
-            margin: EdgeInsets.only(right: 10),
-            height: 50,
-            width: 50,
-            decoration: BoxDecoration(shape: BoxShape.circle),
-            child: ClipOval(
-              child: Image.network(_feedList['facultyImg']),
+          CircleAvatar(
+            radius: 25,
+            backgroundColor: _color,
+            backgroundImage: NetworkImage(
+              _feedList['facultyImg'],
             ),
+          ),
+          SizedBox(
+            width: 8,
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,7 +70,7 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
                 style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
               ),
               Text(
-                _feedList['time'].toString(),
+                _convertDate(),
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w300),
               ),
             ],
@@ -111,21 +96,24 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
   }
 
   Widget _midDetail() {
-    return SizedBox(
-        height: 250.0,
-        width: width,
-        child: Carousel(
-          images: _feedList['feedRes'].map((e) {
-            return _getImg(e);
-          }).toList(),
-          dotSize: 4.0,
-          dotSpacing: 15.0,
-          dotColor: Theme.of(context).accentColor,
-          indicatorBgPadding: 5.0,
-          dotBgColor: Colors.transparent,
-          borderRadius: false,
-          autoplay: false,
-        ));
+    return Hero(
+      tag: _feedList['feedId'].toString(),
+      child: SizedBox(
+          height: 250.0,
+          width: width,
+          child: Carousel(
+            images: _feedList['feedRes'].map((e) {
+              return _getImg(e);
+            }).toList(),
+            dotSize: 4.0,
+            dotSpacing: 15.0,
+            dotColor: Theme.of(context).accentColor,
+            indicatorBgPadding: 5.0,
+            dotBgColor: Colors.transparent,
+            borderRadius: false,
+            autoplay: false,
+          )),
+    );
   }
 
   Widget _bottomDetail() {
@@ -136,14 +124,6 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
         children: [
           SizedBox(
             height: 10,
-          ),
-          Text(
-            _feedList['feedTitle'].toString(),
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            textAlign: TextAlign.start,
-          ),
-          SizedBox(
-            height: 5,
           ),
           Text(
             _feedList['feedDescription'].toString(),
@@ -204,33 +184,50 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
         titleSpacing: 0,
         title: Text(
           _feedList['feedTitle'],
-          style: TextStyle(color: _color),
+          style: TextStyle(
+              color: _color, fontWeight: FontWeight.w600, letterSpacing: 0.2),
         ),
         backgroundColor: Colors.white,
         iconTheme: IconThemeData(color: _color),
         actions: [
-          IconButton(icon: _popUpMenu(), onPressed: () {}),
+          if (_checkFaculty())
+            IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: () async {
+                setState(() {
+                  isLoad = true;
+                });
+                await _feedUtility.deleteFeed(_feedList['feedId']);
+                setState(() {
+                  isLoad = false;
+                });
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                    SplashScreen.routeName, (route) => false);
+              },
+            ),
         ],
       ),
-      body: Card(
-        margin: EdgeInsets.only(bottom: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 10),
-            _topDetail(),
-            SizedBox(
-              height: 10,
+      body: isLoad
+          ? Loading()
+          : Card(
+              margin: EdgeInsets.only(bottom: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 10),
+                  _topDetail(),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  if (_feedList['feedType'] == 'Image') _midDetail(),
+                  _bottomDetail(),
+                  if (_feedList['feedType'] == 'Document') _midPdfDetail(),
+                  SizedBox(
+                    height: 10,
+                  ),
+                ],
+              ),
             ),
-            if (_feedList['feedType'] == 'Image') _midDetail(),
-            _bottomDetail(),
-            if (_feedList['feedType'] == 'Document') _midPdfDetail(),
-            SizedBox(
-              height: 10,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

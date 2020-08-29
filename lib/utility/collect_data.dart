@@ -13,10 +13,13 @@ import 'package:smvitm/providers/feeds.dart';
 class CollectData {
   Future<void> allData(Categories categories, Faculties faculties, Feeds feeds,
       FeedResources feedResources) async {
+    categories.deleteItem();
+    faculties.deleteItem();
+    feeds.deleteItem();
+    feedResources.deleteItem();
+
     final response = await http
-        .post('http://smvitmapp.xtoinfinity.tech/php/getAll.php', body: {
-      'faculty_id': '112',
-    });
+        .post('http://smvitmapp.xtoinfinity.tech/php/getAll.php', body: {});
     final userResponse = json.decode(response.body);
     final allData = userResponse['allData'];
     List facultyData = allData['faculty'];
@@ -25,16 +28,16 @@ class CollectData {
     List feedResourceData = allData['feedResource'];
 
     facultyData.map((e) {
-      faculties.addFaculty(
-        Faculty(
-            id: e['faculty_id'].toString(),
-            branch: e['faculty_branch'].toString(),
-            designation: e['faculty_designation'].toString(),
-            email: e['faculty_email'].toString(),
-            name: e['faculty_name'].toString(),
-            phone: e['faculty_phone'].toString(),
-            photo: e['faculty_photo'].toString()),
-      );
+      faculties.addFaculty(Faculty(
+        id: e['faculty_id'].toString(),
+        branch: e['faculty_branch'].toString(),
+        designation: e['faculty_designation'].toString(),
+        email: e['faculty_email'].toString(),
+        name: e['faculty_name'].toString(),
+        phone: e['faculty_phone'].toString(),
+        photo: e['faculty_photo'].toString(),
+        password: e['password'].toString(),
+      ));
     }).toList();
 
     categoryData.map((e) {

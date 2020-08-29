@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:smvitm/models/faculty.dart';
+import 'package:smvitm/providers/faculties.dart';
 import 'package:smvitm/screens/faculty_detail_screen.dart';
+import 'package:smvitm/screens/faculty_profile_screen.dart';
+import 'package:smvitm/screens/login_screen.dart';
 import 'package:smvitm/screens/select_category_screen.dart';
 import 'package:smvitm/widgets/about.dart';
 import 'package:smvitm/widgets/categories_widget.dart';
@@ -17,6 +23,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   Color _color;
+  Faculties _faculties;
   List _navHead = [
     'News Feed',
     'Categories',
@@ -30,7 +37,7 @@ class _MainScreenState extends State<MainScreen> {
     CategoryWidget(),
     FacultyDetails(),
     ReportIssue(),
-    About()
+    About(),
   ];
 
   Widget _getDrawerItems(
@@ -51,19 +58,76 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  bool _checkFaculty() {
+    final box = GetStorage();
+    return box.hasData('id');
+  }
+
+  Widget _getDrawerHead(double height) {
+    final box = GetStorage();
+    Faculty faculty = _faculties.getOneFaculty(box.read('id'));
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: height * 0.05),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Hero(
+            tag: 'imgTag',
+            child: CircleAvatar(
+              radius: 30,
+              backgroundColor: _color,
+              backgroundImage: NetworkImage(
+                faculty.photo,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 10,
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                faculty.name,
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              Text(
+                faculty.designation,
+                style: TextStyle(
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black54,
+                    fontSize: 13),
+              ),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
   Widget _getDrawer(double height) {
     return Drawer(
       child: SafeArea(
         child: Column(
           children: [
-            Container(
-              margin: EdgeInsets.symmetric(vertical: height * 0.05),
-              child: Image.asset(
-                'assets/icons/logo_color.png',
-                height: height * 0.08,
-                width: height * 0.08,
-                fit: BoxFit.contain,
-              ),
+            GestureDetector(
+              onTap: _checkFaculty()
+                  ? () {
+                      Navigator.pushNamed(
+                          context, FacultyProfileScreen.routeName);
+                    }
+                  : null,
+              child: _checkFaculty()
+                  ? _getDrawerHead(height)
+                  : Container(
+                      margin: EdgeInsets.symmetric(vertical: height * 0.05),
+                      child: Image.asset(
+                        'assets/icons/logo_color.png',
+                        height: height * 0.08,
+                        width: height * 0.08,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
             ),
             _getDrawerItems('${_navHead[0]}', () {
               setState(() {
@@ -101,19 +165,50 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  void _showDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: new Text(
+            "Login to Post",
+            style: TextStyle(fontWeight: FontWeight.w600, color: _color),
+          ),
+          content: new Text(
+              "Only faculties are allowed to post in the newsfeed. To login as a faculty click below."),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text(
+                "Login",
+                style: TextStyle(color: _color),
+              ),
+              onPressed: () {
+                Navigator.pushNamed(context, LoginScreen.routeName);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     _color = Theme.of(context).primaryColor;
     final _mediaQuery = MediaQuery.of(context).size;
+    _faculties = Provider.of<Faculties>(context);
 
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       floatingActionButton: _curIndex != 0
           ? null
           : FloatingActionButton(
-              onPressed: () {
-                Navigator.pushNamed(context, SelectCategoryScreen.routeName);
-              },
+              onPressed: _checkFaculty()
+                  ? () {
+                      Navigator.pushNamed(
+                          context, SelectCategoryScreen.routeName);
+                    }
+                  : _showDialog,
               child: Icon(
                 Icons.add,
                 color: _color,
