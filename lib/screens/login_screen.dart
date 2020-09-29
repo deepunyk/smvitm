@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:smvitm/models/faculty.dart';
 import 'package:smvitm/providers/faculties.dart';
 import 'package:smvitm/screens/main_screen.dart';
+import 'package:smvitm/utility/url_utility.dart';
 import 'package:smvitm/widgets/loading.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -20,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController _passCon = TextEditingController();
   Faculties _faculties;
   bool isLoad = false;
+  Color _color;
 
   Widget _getTextField(double width, bool obscure, String label,
       TextEditingController controller) {
@@ -33,15 +36,15 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  _showSnackBar() {
+  _showSnackBar(String text) {
     _scaffoldKey.currentState.showSnackBar(
       SnackBar(
         content: Text(
-          "Invalid Credentials",
+          "$text",
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Theme.of(context).primaryColor,
-        duration: Duration(seconds: 1),
+        duration: Duration(seconds: 2),
       ),
     );
   }
@@ -50,14 +53,13 @@ class _LoginScreenState extends State<LoginScreen> {
     String id = _idCon.text, password = _passCon.text;
 
     if (id.length < 2 || password.length < 3) {
-      _showSnackBar();
+      _showSnackBar('Invalid Credentials');
     } else {
       print("$id  $password");
       setState(() {
         isLoad = true;
       });
-      final response = await http.post(
-          'http://smvitmapp.xtoinfinity.tech/php/facultyLogin.php',
+      final response = await http.post('${UrlUtility.mainUrl}facultyLogin.php',
           body: {'faculty_id': id, 'password': password});
       setState(() {
         isLoad = false;
@@ -69,15 +71,87 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.of(context)
             .pushNamedAndRemoveUntil(MainScreen.routeName, (route) => false);
       } else {
-        _showSnackBar();
+        _showSnackBar('Invalid Credentials');
       }
     }
+  }
+
+  _resetPassword(String fidText) async {
+    setState(() {
+      isLoad = true;
+    });
+    final response =
+        await http.post('${UrlUtility.mainUrl}sendPass.php', body: {
+      'fid': fidText,
+    });
+    setState(() {
+      isLoad = false;
+    });
+    if (response.body == 'yes') {
+      _showSnackBar('We have mailed your login credentials');
+    } else {
+      _showSnackBar(
+          'FID not found. Please contact app developers for more details.');
+    }
+  }
+
+  void _showDialog() {
+    String fidText = "";
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            "Enter your Faculty ID",
+            style: TextStyle(
+                fontWeight: FontWeight.w600, color: _color, fontSize: 18),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "We will send your login credentials to sode-edu E-mail associated with this ID",
+                style: TextStyle(
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black87,
+                    fontSize: 14),
+              ),
+              Container(
+                  child: TextField(
+                onChanged: (val) => fidText = val,
+                decoration: InputDecoration(
+                    hintText: 'Faculty ID', hintStyle: TextStyle(fontSize: 14)),
+                keyboardType: TextInputType.number,
+              ))
+            ],
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text(
+                "Continue",
+                style: TextStyle(color: _color),
+              ),
+              onPressed: () {
+                if (fidText.length > 2) {
+                  Navigator.of(context).pop();
+                  _resetPassword(fidText);
+                } else {
+                  Navigator.of(context).pop();
+                  _showSnackBar('Invalid FID');
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final _mediaQuery = MediaQuery.of(context).size;
     _faculties = Provider.of<Faculties>(context);
+    _color = Theme.of(context).primaryColor;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -135,7 +209,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.centerRight,
                     child: FlatButton(
                       padding: EdgeInsets.zero,
-                      onPressed: () {},
+                      onPressed: () {
+                        _showDialog();
+                      },
                       child: Text(
                         "Forgot Password",
                         style: TextStyle(

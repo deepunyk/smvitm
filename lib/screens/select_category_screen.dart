@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -97,7 +98,8 @@ class SelectCategoryScreen extends StatelessWidget {
                   CircleAvatar(
                     radius: 50.0,
                     backgroundColor: Theme.of(context).primaryColor,
-                    backgroundImage: NetworkImage(_categoryList[index].image),
+                    backgroundImage:
+                        CachedNetworkImageProvider(_categoryList[index].image),
                   ),
                   const SizedBox(height: 12.0),
                   Text(
@@ -106,6 +108,7 @@ class SelectCategoryScreen extends StatelessWidget {
                       letterSpacing: 0.6,
                       fontWeight: FontWeight.w600,
                     ),
+                    textAlign: TextAlign.center,
                   )
                 ],
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smvitm/models/feed.dart';
+import 'package:smvitm/providers/categories.dart';
 import 'package:smvitm/providers/faculties.dart';
 import 'package:smvitm/providers/feed_resources.dart';
 
@@ -11,24 +12,28 @@ class Feeds with ChangeNotifier {
   }
 
   List<Map<String, dynamic>> getFeed(
-      FeedResources feedResources, Faculties faculties) {
+      FeedResources feedResources, Faculties faculties, Categories categories) {
     List<Map<String, dynamic>> _feedList = [];
     _feeds.map((e) {
-      _feedList.add({
-        'feedId': e.feedId,
-        'feedDescription': e.feedDescription,
-        'time': e.feedTime,
-        'feedTitle': e.feedTitle,
-        'feedType': e.feedType,
-        'feedRes': feedResources.getFeedResource(e.feedId),
-        'facultyName': faculties.getFacultyName(e.facultyId),
-        'facultyId': e.facultyId,
-        'facultyImg': faculties.getFacultyImage(e.facultyId),
-      });
+      if (categories.getSelectedList().contains(e.categoryId)) {
+        _feedList.add({
+          'feedId': e.feedId,
+          'feedDescription': e.feedDescription,
+          'time': e.feedTime,
+          'feedTitle': e.feedTitle,
+          'feedType': e.feedType,
+          'feedRes': feedResources.getFeedResource(e.feedId),
+          'facultyName': faculties.getFacultyName(e.facultyId),
+          'facultyId': e.facultyId,
+          'facultyImg': faculties.getFacultyImage(e.facultyId),
+          'categoryName': categories.getCategoryName(e.categoryId)
+        });
+      }
     }).toList();
     _feedList.sort((a, b) {
       return DateTime.parse(b['time']).compareTo(DateTime.parse(a['time']));
     });
+
     return _feedList;
   }
 

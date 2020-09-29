@@ -19,56 +19,15 @@ class _CategoryWidgetState extends State<CategoryWidget> {
   List<Category> _categoryList = [];
   bool isGet = false;
 
-  Widget getCategoryCard(String img, String name, String id) {
-    return Card(
-      child: Container(
-        height: 100,
-        width: width,
-        child: Row(
-          children: [
-            Container(
-              height: 100,
-              width: width * 0.3,
-              child: CachedNetworkImage(
-                imageUrl: img,
-                fit: BoxFit.cover,
-              ),
-            ),
-            Expanded(
-              child: Container(
-                margin: EdgeInsets.only(left: 10),
-                color: Colors.white,
-                height: 100,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text(
-                      name,
-                      style:
-                          TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
-                    ),
-                    GestureDetector(
-                      onTap: () {},
-                      child: Container(
-                        decoration: BoxDecoration(
-                            color: _color,
-                            borderRadius: BorderRadius.circular(5)),
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                        child: Text(
-                          "Join",
-                          style: TextStyle(
-                              color: Colors.white, letterSpacing: 1.1),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          ],
+  _showSubscribeSnack(String name, BuildContext ctx) {
+    Scaffold.of(ctx).showSnackBar(
+      SnackBar(
+        content: Text(
+          "You have $name",
+          style: TextStyle(color: Colors.white),
         ),
+        backgroundColor: Theme.of(ctx).primaryColor,
+        duration: Duration(seconds: 1),
       ),
     );
   }
@@ -87,76 +46,87 @@ class _CategoryWidgetState extends State<CategoryWidget> {
     }
 
     return Container(
-      child: GridView.builder(
-        padding: EdgeInsets.symmetric(vertical: 10.0),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 10.0,
-          crossAxisSpacing: 10.0,
-        ),
-        itemCount: _categoryList.length,
-        itemBuilder: (context, index) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-            ),
-            child: Stack(
-              children: [
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircleAvatar(
-                        radius: 50.0,
-                        backgroundColor: Theme.of(context).primaryColor,
-                        backgroundImage:
-                            NetworkImage(_categoryList[index].image),
-                      ),
-                      const SizedBox(height: 12.0),
-                      Text(
-                        _categoryList[index].name,
-                        style: TextStyle(
-                          letterSpacing: 0.6,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      )
-                    ],
-                  ),
+      child: LayoutBuilder(
+        builder: (ctx, constraints) => GridView.builder(
+          padding: EdgeInsets.symmetric(vertical: 10.0),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 10.0,
+            crossAxisSpacing: 10.0,
+          ),
+          itemCount: _categoryList.length,
+          itemBuilder: (context, index) {
+            return InkWell(
+              onTap: () {
+                setState(() {
+                  if (_categories
+                      .getSelectedList()
+                      .contains(_categoryList[index].id)) {
+                    _showSubscribeSnack(
+                        "unsubscribed from ${_categoryList[index].name}", ctx);
+                    _categories.removeSelectedCategory(_categoryList[index].id);
+                  } else {
+                    _showSubscribeSnack(
+                        "subscribed to ${_categoryList[index].name}", ctx);
+                    _categories.addSelectedCategory(_categoryList[index].id);
+                  }
+                });
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
                 ),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _categoryList[index].isSelect =
-                            !_categoryList[index].isSelect;
-                      });
-                    },
-                    icon: Transform.rotate(
-                      angle: math.pi / 4,
-                      child: Icon(
-                        MdiIcons.pin,
-                        color: _categoryList[index].isSelect
-                            ? Theme.of(context).primaryColor
-                            : Colors.grey,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 50.0,
+                            backgroundColor: Theme.of(context).primaryColor,
+                            backgroundImage: CachedNetworkImageProvider(
+                                _categoryList[index].image),
+                          ),
+                          const SizedBox(height: 12.0),
+                          Text(
+                            _categoryList[index].name,
+                            style: TextStyle(
+                              letterSpacing: 0.6,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                          )
+                        ],
                       ),
                     ),
-                    iconSize: 24.0,
-                  ),
+                    Positioned(
+                      right: 10,
+                      top: 10,
+                      child: Transform.rotate(
+                        angle: math.pi / 4,
+                        child: Icon(
+                          MdiIcons.pin,
+                          color: _categories
+                                  .getSelectedList()
+                                  .contains(_categoryList[index].id)
+                              ? Theme.of(context).primaryColor
+                              : Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          );
-        },
-      ), /*ListView(
-          children: _categories.getCategory().map((e) {
-        return getCategoryCard(e.image, e.name, e.id);
-      }).toList()),*/
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }

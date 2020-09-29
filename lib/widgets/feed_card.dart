@@ -11,6 +11,7 @@ import 'package:smvitm/utility/feed_utility.dart';
 
 class FeedCard extends StatefulWidget {
   final Map<String, dynamic> feedDetail;
+
   FeedCard(this.feedDetail);
 
   @override
@@ -66,10 +67,24 @@ class _FeedCardState extends State<FeedCard> {
                 widget.feedDetail['facultyName'].toString(),
                 style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
               ),
-              Text(
-                _convertDate(),
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w300),
-              ),
+              RichText(
+                  text: TextSpan(
+                      style: DefaultTextStyle.of(context).style,
+                      children: [
+                    TextSpan(
+                      text:
+                          "#${widget.feedDetail['categoryName'].toString().replaceAll(" ", "")} ",
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w300,
+                          color: _color),
+                    ),
+                    TextSpan(
+                      text: "${_convertDate()}",
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.w300),
+                    )
+                  ]))
             ],
           ),
         ],

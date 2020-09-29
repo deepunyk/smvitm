@@ -1,4 +1,6 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:provider/provider.dart';
@@ -23,6 +25,11 @@ void main() async {
       debug: true // optional: set false to disable printing logs to console
       );
   await GetStorage.init();
+  await Firebase.initializeApp();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   runApp(
     MultiProvider(
       providers: [
@@ -41,7 +48,9 @@ void main() async {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: SplashScreen(),
+        home: SplashScreen(
+          loading: false,
+        ),
         theme: ThemeData(
           primaryColor: ColorPalette.primaryColor,
           accentColor: ColorPalette.accentColor,

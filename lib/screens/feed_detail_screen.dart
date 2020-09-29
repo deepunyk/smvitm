@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_pro/carousel_pro.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -9,6 +10,7 @@ import 'package:smvitm/screens/pdf_view_screen.dart';
 import 'package:smvitm/screens/splash_screen.dart';
 import 'package:smvitm/utility/feed_utility.dart';
 import 'package:smvitm/widgets/loading.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class FeedDetailScreen extends StatefulWidget {
   static const routeName = '/feed';
@@ -125,8 +127,16 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
           SizedBox(
             height: 10,
           ),
-          Text(
-            _feedList['feedDescription'].toString(),
+          SelectableLinkify(
+            onOpen: (link) async {
+              if (await canLaunch(link.url)) {
+                await launch(link.url);
+              } else {
+                throw 'Could not launch $link';
+              }
+            },
+            enableInteractiveSelection: true,
+            text: _feedList['feedDescription'].toString(),
             textAlign: TextAlign.start,
           ),
         ],
@@ -209,8 +219,7 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
       ),
       body: isLoad
           ? Loading()
-          : Card(
-              margin: EdgeInsets.only(bottom: 10),
+          : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

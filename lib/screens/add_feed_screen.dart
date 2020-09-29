@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:smvitm/screens/splash_screen.dart';
+import 'package:smvitm/utility/url_utility.dart';
 import 'package:smvitm/widgets/loading.dart';
 
 class AddFeedScreen extends StatefulWidget {
@@ -128,7 +130,7 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
           message,
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.red.shade900,
+        backgroundColor: Theme.of(context).primaryColor,
         duration: Duration(seconds: 1),
       ),
     );
@@ -139,7 +141,8 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
       _showSnackBar('Please enter the title');
     } else if (_description.text == null || _description.text.length <= 0) {
       _showSnackBar('Please enter the description');
-    } else if (widget.type != 'Text' && _files == null) {
+    } else if (widget.type != 'Text' &&
+        (_files == null || _files.length == 0)) {
       _showSnackBar('Please attach a file');
     } else {
       if (widget.type != 'Text') {
@@ -155,8 +158,8 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
       setState(() {
         isLoad = true;
       });
-      http.Response response = await http
-          .post('http://smvitmapp.xtoinfinity.tech/php/addFeed.php', body: {
+      http.Response response =
+          await http.post('${UrlUtility.mainUrl}addFeed.php', body: {
         'category_id': widget.categoryId,
         'feed_title': _title.text,
         'feed_description': _description.text,
@@ -167,16 +170,26 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
         'type': widget.type,
         'feed_time': DateTime.now().toString(),
       });
-      setState(() {
-        isLoad = false;
-      });
       print(response.body.toString());
 
       if (response.body.toString() == 'yes') {
+        await FirebaseFirestore.instance.collection('notification').add({
+          'title': _title.text,
+          'body': _description.text,
+          'to': widget.categoryId,
+        });
+        setState(() {
+          isLoad = false;
+        });
         Navigator.of(context)
             .pushNamedAndRemoveUntil(SplashScreen.routeName, (route) => false);
       } else {
         _showSnackBar('Something went wrong... Please try again');
+        setState(() {
+          isLoad = false;
+        });
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil(SplashScreen.routeName, (route) => false);
       }
     }
   }
@@ -235,13 +248,12 @@ class _InputField extends StatelessWidget {
       margin: EdgeInsets.all(10.0),
       child: TextField(
         controller: controller,
-        textInputAction: TextInputAction.done,
-        keyboardType: TextInputType.text,
         textCapitalization: TextCapitalization.sentences,
         maxLines: maxLines,
+        keyboardType: TextInputType.multiline,
         style: TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 18.0,
+          fontWeight: FontWeight.w400,
+          fontSize: 16.0,
           letterSpacing: 1,
         ),
         decoration: InputDecoration(

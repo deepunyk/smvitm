@@ -13,6 +13,7 @@ import 'package:smvitm/widgets/categories_widget.dart';
 import 'package:smvitm/widgets/faculty_details.dart';
 import 'package:smvitm/widgets/feed_widget.dart';
 import 'package:smvitm/widgets/report_issue.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MainScreen extends StatefulWidget {
   static const routeName = '/main';
@@ -31,14 +32,24 @@ class _MainScreenState extends State<MainScreen> {
     'Report an issue',
     'About'
   ];
+  List<Widget> _widgetList = [];
   int _curIndex = 0;
-  List<Widget> _widgetList = [
-    FeedWidget(),
-    CategoryWidget(),
-    FacultyDetails(),
-    ReportIssue(),
-    About(),
-  ];
+
+  switchTabs(int index) {
+    setState(() {
+      _curIndex = index;
+    });
+  }
+
+  addScreens() {
+    _widgetList = [
+      FeedWidget(switchTabs),
+      CategoryWidget(),
+      FacultyDetails(),
+      ReportIssue(),
+      About(),
+    ];
+  }
 
   Widget _getDrawerItems(
       String title, Function onTap, IconData icon, int code) {
@@ -108,58 +119,66 @@ class _MainScreenState extends State<MainScreen> {
   Widget _getDrawer(double height) {
     return Drawer(
       child: SafeArea(
-        child: Column(
-          children: [
-            GestureDetector(
-              onTap: _checkFaculty()
-                  ? () {
-                      Navigator.pushNamed(
-                          context, FacultyProfileScreen.routeName);
-                    }
-                  : null,
-              child: _checkFaculty()
-                  ? _getDrawerHead(height)
-                  : Container(
-                      margin: EdgeInsets.symmetric(vertical: height * 0.05),
-                      child: Image.asset(
-                        'assets/icons/logo_color.png',
-                        height: height * 0.08,
-                        width: height * 0.08,
-                        fit: BoxFit.contain,
+        child: Container(
+          color: Colors.white,
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: _checkFaculty()
+                    ? () {
+                        Navigator.pushNamed(
+                            context, FacultyProfileScreen.routeName);
+                      }
+                    : null,
+                child: _checkFaculty()
+                    ? _getDrawerHead(height)
+                    : Container(
+                        margin: EdgeInsets.symmetric(vertical: height * 0.05),
+                        child: Image.asset(
+                          'assets/icons/logo_color.png',
+                          height: height * 0.08,
+                          width: height * 0.08,
+                          fit: BoxFit.contain,
+                        ),
                       ),
-                    ),
-            ),
-            _getDrawerItems('${_navHead[0]}', () {
-              setState(() {
-                _curIndex = 0;
-                Navigator.of(context).pop();
-              });
-            }, MdiIcons.newspaper, 0),
-            _getDrawerItems('${_navHead[1]}', () {
-              setState(() {
-                _curIndex = 1;
-                Navigator.of(context).pop();
-              });
-            }, MdiIcons.newspaperVariantMultiple, 1),
-            _getDrawerItems('${_navHead[2]}', () {
-              setState(() {
-                _curIndex = 2;
-                Navigator.of(context).pop();
-              });
-            }, MdiIcons.teach, 2),
-            _getDrawerItems('${_navHead[3]}', () {
-              setState(() {
-                _curIndex = 3;
-                Navigator.of(context).pop();
-              });
-            }, MdiIcons.alert, 3),
-            _getDrawerItems('${_navHead[4]}', () {
-              setState(() {
-                _curIndex = 4;
-                Navigator.of(context).pop();
-              });
-            }, MdiIcons.information, 4),
-          ],
+              ),
+              _getDrawerItems('${_navHead[0]}', () {
+                setState(() {
+                  _curIndex = 0;
+                  Navigator.of(context).pop();
+                });
+              }, MdiIcons.newspaper, 0),
+              _getDrawerItems('${_navHead[1]}', () {
+                setState(() {
+                  _curIndex = 1;
+                  Navigator.of(context).pop();
+                });
+              }, MdiIcons.newspaperVariantMultiple, 1),
+              _getDrawerItems('${_navHead[2]}', () {
+                setState(() {
+                  _curIndex = 2;
+                  Navigator.of(context).pop();
+                });
+              }, MdiIcons.teach, 2),
+              _getDrawerItems('${_navHead[3]}', () {
+                setState(() {
+                  _curIndex = 3;
+                  Navigator.of(context).pop();
+                });
+              }, MdiIcons.alert, 3),
+              _getDrawerItems('${_navHead[4]}', () async {
+                const url = 'https://www.instagram.com/x_to_infinity/';
+                if (await canLaunch(url)) {
+                  await launch(url);
+                } else {
+                  throw 'Could not launch $url';
+                }
+                setState(() {
+                  Navigator.of(context).pop();
+                });
+              }, MdiIcons.information, 4),
+            ],
+          ),
         ),
       ),
     );
@@ -193,52 +212,73 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    addScreens();
+  }
+
+  Future<bool> _willPopCallback() async {
+    if (_curIndex != 0) {
+      setState(() {
+        _curIndex = 0;
+      });
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     _color = Theme.of(context).primaryColor;
     final _mediaQuery = MediaQuery.of(context).size;
     _faculties = Provider.of<Faculties>(context);
 
-    return Scaffold(
-      resizeToAvoidBottomPadding: false,
-      floatingActionButton: _curIndex != 0
-          ? null
-          : FloatingActionButton(
-              onPressed: _checkFaculty()
-                  ? () {
-                      Navigator.pushNamed(
-                          context, SelectCategoryScreen.routeName);
-                    }
-                  : _showDialog,
-              child: Icon(
-                Icons.add,
-                color: _color,
-              ),
-              backgroundColor: Colors.white,
-            ),
-      appBar: AppBar(
-        titleSpacing: 0,
-        title: Text(
-          "${_navHead[_curIndex]}",
-          style: TextStyle(
-              color: _color, letterSpacing: 0.2, fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: Colors.white,
-        iconTheme: IconThemeData(color: _color),
-        actions: [
-          if (_curIndex == 2)
-            IconButton(
-                icon: Icon(
-                  Icons.search,
+    return WillPopScope(
+      onWillPop: _willPopCallback,
+      child: Scaffold(
+        resizeToAvoidBottomPadding: false,
+        floatingActionButton: _curIndex != 0
+            ? null
+            : FloatingActionButton(
+                onPressed: _checkFaculty()
+                    ? () {
+                        Navigator.pushNamed(
+                            context, SelectCategoryScreen.routeName);
+                      }
+                    : _showDialog,
+                child: Icon(
+                  Icons.add,
                   color: _color,
                 ),
-                onPressed: () {
-                  Navigator.of(context)
-                      .pushNamed(FacultyDetailScreen.routeName);
-                })
-        ],
+                backgroundColor: Colors.white,
+              ),
+        appBar: AppBar(
+          titleSpacing: 0,
+          title: Text(
+            "${_navHead[_curIndex]}",
+            style: TextStyle(
+                color: _color, letterSpacing: 0.2, fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: Colors.white,
+          iconTheme: IconThemeData(color: _color),
+          actions: [
+            if (_curIndex == 2)
+              IconButton(
+                  icon: Icon(
+                    Icons.search,
+                    color: _color,
+                  ),
+                  onPressed: () {
+                    Navigator.of(context)
+                        .pushNamed(FacultyDetailScreen.routeName);
+                  })
+          ],
+        ),
+        drawer: _getDrawer(_mediaQuery.height),
+        body: Container(height: double.infinity, child: _widgetList[_curIndex]),
       ),
-      drawer: _getDrawer(_mediaQuery.height),
-      body: Container(height: double.infinity, child: _widgetList[_curIndex]),
     );
   }
 }
